@@ -14,16 +14,14 @@ const app = express();
 const allowedOrigins = [
   "http://localhost:3000",
   "http://localhost:5173",
-
-  // Apna actual Netlify URL yahan daal
-  "https://enchanting-alpaca-17d0b5.netlify.app/",
+  "https://enchanting-alpaca-17d0b5.netlify.app",
 ];
 
 app.use(
   cors({
     origin: function (origin, callback) {
-      // Allow requests without origin
-      // e.g. Postman, server-to-server requests
+      // Allow requests without an Origin
+      // Example: Postman, server-to-server requests
       if (!origin) {
         return callback(null, true);
       }
@@ -39,7 +37,14 @@ app.use(
       );
     },
 
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    methods: [
+      "GET",
+      "POST",
+      "PUT",
+      "PATCH",
+      "DELETE",
+      "OPTIONS",
+    ],
 
     allowedHeaders: [
       "Content-Type",
