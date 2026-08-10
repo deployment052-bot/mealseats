@@ -320,14 +320,9 @@
 </section>
 
 <script>
-/* ============ CONFIG ============
-   Apna backend API ka base URL yaha daalo.
-   Example: "https://yourapp.com/api/chat"
-   Backend is body format expect kar raha hai: { guestSessionId, message }
-   Aur response format: { success, message, data: { chatId, response, ... } }
-=================================== */
+
 const CONFIG = {
-  API_URL: "https://mealseats.onrender.com/api/ai", // <-- ISE APNE ACTUAL BACKEND URL SE REPLACE KARO
+  API_URL: "https://mealseats.onrender.com/api/ai/chat", // <-- ISE APNE ACTUAL BACKEND URL SE REPLACE KARO
 };
 
 let guestSessionId = "guest_" + Math.random().toString(36).slice(2, 10);
