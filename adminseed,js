@@ -1,0 +1,46 @@
+require("dotenv").config();
+
+const mongoose = require("mongoose");
+
+const Admin = require("./MODULE/ADMIN(auth)/models/user.model");
+
+const createAdmin = async () => {
+  try {
+    await mongoose.connect(process.env.MONGO_URI);
+
+    console.log("MongoDB connected");
+
+    const email = "admin@mealeats.com";
+    const password = "12345";
+
+    const existingAdmin = await Admin.findOne({ email });
+
+    if (existingAdmin) {
+      console.log("Admin already exists");
+      return;
+    }
+
+    const admin = await Admin.create({
+      name: "MealEats Admin",
+      email,
+      password,
+      role: "ADMIN",
+      isActive: true,
+    });
+
+    console.log("================================");
+    console.log("ADMIN CREATED SUCCESSFULLY");
+    console.log("================================");
+    console.log("ID:", admin._id);
+    console.log("Email:", admin.email);
+    console.log("Password: 12345");
+    console.log("Role:", admin.role);
+    console.log("================================");
+  } catch (error) {
+    console.error("ADMIN SEED ERROR:", error);
+  } finally {
+    await mongoose.disconnect();
+  }
+};
+
+createAdmin();

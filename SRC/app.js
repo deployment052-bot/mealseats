@@ -1,6 +1,9 @@
 const express = require("express");
 const cors = require("cors");
+const path = require("path");
 
+const contactRoutes = require("../MODULE/CONTACT/routes/contact.routes");
+const adminContactRoutes = require("../MODULE/ADMIN(auth)/routes/contact.routes");
 const aiRoutes = require("../MODULE/AI-CHAT/aiRoutes");
 
 const app = express();
@@ -20,8 +23,6 @@ const allowedOrigins = [
 app.use(
   cors({
     origin: function (origin, callback) {
-      // Allow requests without an Origin
-      // Example: Postman, server-to-server requests
       if (!origin) {
         return callback(null, true);
       }
@@ -71,13 +72,28 @@ app.use(
 
 /**
  * ============================
- * AI ROUTES
+ * PDF / UPLOADS
  * ============================
- *
- * POST /api/ai/chat
+ */
+
+app.use(
+  "/uploads",
+  express.static(
+    path.join(process.cwd(), "uploads")
+  )
+);
+
+/**
+ * ============================
+ * ROUTES
+ * ============================
  */
 
 app.use("/api/ai", aiRoutes);
+
+app.use("/api/contact", contactRoutes);
+
+app.use("/api/auth", adminContactRoutes);
 
 /**
  * ============================

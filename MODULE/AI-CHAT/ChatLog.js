@@ -1,5 +1,27 @@
 const mongoose = require("mongoose");
 
+const chatMediaSchema = new mongoose.Schema(
+  {
+    originalName: {
+      type: String,
+      trim: true,
+    },
+
+    mimeType: {
+      type: String,
+      trim: true,
+    },
+
+    size: {
+      type: Number,
+      min: 0,
+    },
+  },
+  {
+    _id: false,
+  }
+);
+
 const chatLogSchema = new mongoose.Schema(
   {
     guestSessionId: {
@@ -11,7 +33,7 @@ const chatLogSchema = new mongoose.Schema(
 
     message: {
       type: String,
-      required: true,
+      default: "",
       trim: true,
       maxlength: 2000,
     },
@@ -20,6 +42,11 @@ const chatLogSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
+    },
+
+    media: {
+      type: chatMediaSchema,
+      default: null,
     },
 
     ipAddress: {
@@ -32,6 +59,9 @@ const chatLogSchema = new mongoose.Schema(
   }
 );
 
-const ChatLog = mongoose.model("ChatLog", chatLogSchema);
+const ChatLog = mongoose.model(
+  "ChatLog",
+  chatLogSchema
+);
 
 module.exports = ChatLog;

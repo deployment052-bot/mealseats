@@ -1,21 +1,41 @@
 const express = require("express");
 
-const { chatWithAI } = require("./aiController");
-const { aiChatLimiter } = require("./rateLimiter");
+const {
+  chatWithAI,
+  getAdminChats,
+} = require("./aiController");
+
+const {
+  aiChatLimiter,
+} = require("./rateLimiter");
+
+const {
+  aiMediaUpload,
+} = require("./aiUpload.middleware");
+
+const adminAuth = require("../ADMIN(auth)/middleware/admin.middleware");
 
 const router = express.Router();
 
-/**
- * Guest AI Chat
- *
- * POST /api/ai/chat
- *
- * Maximum 8 messages per IP per day.
- */
+
 router.post(
   "/chat",
   aiChatLimiter,
+  aiMediaUpload.single("media"),
   chatWithAI
+);
+
+/**
+ * Admin - Get AI Chat History
+ *
+ * GET /api/ai/admin/chats
+ *
+ * Protected by Admin JWT
+ */
+router.get(
+  "/admin/chats",
+  adminAuth,
+  getAdminChats
 );
 
 module.exports = router;
