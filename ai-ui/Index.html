@@ -18,6 +18,8 @@
     --ink:#1c2117;
     --ink-soft:#5b6154;
     --line:#e3e6db;
+    --danger:#b3432b;
+    --danger-bg:#fbebe6;
   }
 
   *{box-sizing:border-box;}
@@ -146,8 +148,10 @@
     background:var(--ink);color:var(--cream);
     display:flex;align-items:center;justify-content:center;cursor:pointer;
     transition:background .2s ease, transform .15s ease;
+    flex-shrink:0;
   }
   .send-btn:hover{background:var(--green-800);transform:scale(1.05);}
+  .send-btn:disabled{background:#c7cabb;cursor:not-allowed;transform:none;}
 
   .suggestions{
     display:flex;flex-wrap:wrap;gap:10px;justify-content:center;
@@ -179,33 +183,55 @@
   }
   .msg{max-width:640px;display:flex;flex-direction:column;gap:8px;}
   .msg.user{align-self:flex-end;align-items:flex-end;}
-  .msg.ai{align-self:flex-start;align-items:flex-start;}
+  .msg.ai{align-self:flex-start;align-items:flex-start;max-width:720px;width:100%;}
   .bubble{
     padding:13px 17px;border-radius:16px;font-size:15px;line-height:1.55;
-    white-space:pre-wrap;word-wrap:break-word;
+    word-wrap:break-word;overflow-wrap:anywhere;
   }
   .msg.user .bubble{
     background:var(--green-800);color:#f7f4e6;border-bottom-right-radius:5px;
+    max-width:100%;
   }
   .msg.ai .bubble{
     background:transparent;color:var(--ink);padding-left:0;padding-right:0;
-    border-bottom-left-radius:5px;
+    border-bottom-left-radius:5px;width:100%;
   }
   .msg.ai .bubble p{margin:0 0 10px;}
   .msg.ai .bubble p:last-child{margin-bottom:0;}
-  .msg.ai .bubble h4{
-    font-family:'Fraunces',serif;font-weight:600;font-size:16px;
-    color:var(--green-800);margin:16px 0 8px;
+  .msg.ai .bubble h2,.msg.ai .bubble h3,.msg.ai .bubble h4{
+    font-family:'Fraunces',serif;font-weight:600;
+    color:var(--green-800);margin:18px 0 8px;
   }
+  .msg.ai .bubble h2{font-size:19px;}
+  .msg.ai .bubble h3{font-size:17px;}
+  .msg.ai .bubble h4{font-size:15.5px;}
+  .msg.ai .bubble h2:first-child,
+  .msg.ai .bubble h3:first-child,
   .msg.ai .bubble h4:first-child{margin-top:0;}
-  .msg.ai .bubble ul{margin:0 0 12px;padding-left:20px;}
+  .msg.ai .bubble ul,.msg.ai .bubble ol{margin:0 0 12px;padding-left:20px;}
   .msg.ai .bubble li{margin-bottom:5px;}
   .msg.ai .bubble strong{color:var(--green-800);font-weight:700;}
-  .msg.ai .bubble hr{border:none;border-top:1px solid var(--line);margin:14px 0;}
-  .ai-icon-row{display:flex;align-items:center;gap:8px;color:var(--ink-soft);}
-  .ai-actions{display:flex;gap:14px;color:#9aa08d;padding-left:2px;}
-  .ai-actions svg{width:16px;height:16px;cursor:pointer;transition:color .15s ease;}
-  .ai-actions svg:hover{color:var(--green-700);}
+  .msg.ai .bubble em{color:var(--ink);}
+  .msg.ai .bubble hr{border:none;border-top:1px solid var(--line);margin:16px 0;}
+
+  .table-scroll{width:100%;overflow-x:auto;margin:8px 0 16px;border-radius:12px;border:1px solid var(--line);-webkit-overflow-scrolling:touch;}
+  .md-table{border-collapse:collapse;width:100%;min-width:420px;font-size:14px;}
+  .md-table th{
+    background:#eef3e5;color:var(--green-800);font-weight:700;
+    text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);
+    white-space:nowrap;
+  }
+  .md-table td{padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top;}
+  .md-table tr:last-child td{border-bottom:none;}
+  .md-table tr:nth-child(even) td{background:#fafbf7;}
+
+  .ai-actions{display:flex;gap:16px;color:#9aa08d;padding:4px 2px 0;align-items:center;}
+  .ai-actions button{background:none;border:none;padding:0;cursor:pointer;color:inherit;display:flex;align-items:center;}
+  .ai-actions svg{width:16px;height:16px;transition:color .15s ease;}
+  .ai-actions button:hover svg{color:var(--green-700);}
+  .ai-actions button.active svg{color:var(--green-700);}
+  .copy-feedback{font-size:12px;color:var(--green-700);font-weight:600;opacity:0;transition:opacity .2s ease;}
+  .copy-feedback.show{opacity:1;}
 
   .typing{display:flex;gap:5px;padding:6px 0;}
   .typing span{
@@ -215,6 +241,43 @@
   .typing span:nth-child(2){animation-delay:.15s;}
   .typing span:nth-child(3){animation-delay:.3s;}
   @keyframes bounce{0%,60%,100%{transform:translateY(0);opacity:.5;}30%{transform:translateY(-5px);opacity:1;}}
+
+  /* ---------- Media in messages ---------- */
+  .msg-media{max-width:280px;border-radius:14px;overflow:hidden;margin-bottom:2px;}
+  .msg-media img{width:100%;max-width:280px;max-height:280px;object-fit:cover;display:block;border-radius:14px;cursor:zoom-in;}
+  .msg-media video{width:100%;max-width:300px;border-radius:14px;display:block;background:#000;}
+
+  /* ---------- PDF card ---------- */
+  .pdf-card{
+    display:flex;align-items:center;gap:14px;
+    background:var(--paper);border:1px solid var(--line);
+    border-radius:16px;padding:14px 16px;margin-top:6px;
+    max-width:420px;box-shadow:0 8px 20px -14px rgba(30,50,15,.4);
+  }
+  .pdf-icon{
+    width:44px;height:44px;border-radius:10px;flex-shrink:0;
+    background:linear-gradient(135deg,#e8503b,#b3432b);
+    display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px;font-weight:700;
+  }
+  .pdf-info{flex:1;min-width:0;}
+  .pdf-title{font-weight:700;font-size:13.5px;color:var(--ink);}
+  .pdf-name{font-size:12px;color:var(--ink-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .pdf-actions{display:flex;gap:8px;margin-top:8px;}
+  .pdf-btn{
+    font-size:12.5px;font-weight:600;padding:6px 12px;border-radius:999px;
+    border:1px solid var(--green-700);color:var(--green-800);background:transparent;
+    cursor:pointer;text-decoration:none;display:inline-block;
+  }
+  .pdf-btn.solid{background:var(--green-700);color:#fff;border-color:var(--green-700);}
+  @media(max-width:480px){
+    .pdf-card{flex-direction:column;align-items:flex-start;max-width:100%;}
+  }
+
+  /* ---------- Error bubble ---------- */
+  .error-bubble{
+    background:var(--danger-bg);color:var(--danger);border:1px solid rgba(179,67,43,.25);
+    border-radius:14px;padding:12px 16px;font-size:14px;max-width:520px;
+  }
 
   .composer-wrap{
     position:sticky;bottom:0;
@@ -226,25 +289,64 @@
     background:var(--paper);
     border:1px solid var(--line);
     border-radius:20px;
-    display:flex;align-items:center;gap:10px;
-    padding:8px 8px 8px 20px;
+    padding:8px 8px 8px 8px;
     box-shadow:0 14px 30px -16px rgba(30,50,15,.25);
   }
+  .composer-row{display:flex;align-items:center;gap:6px;}
   #chatInput{
     flex:1;border:none;outline:none;font-size:15.5px;font-family:'Inter',sans-serif;
-    background:transparent;color:var(--ink);padding:10px 0;
+    background:transparent;color:var(--ink);padding:10px 4px;min-width:0;
   }
   #chatInput::placeholder{color:#9aa08d;}
+
+  .plus-btn{
+    width:36px;height:36px;border-radius:50%;border:1px solid var(--line);
+    background:#f5f6f0;color:var(--green-800);flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;cursor:pointer;
+    transition:background .2s ease;position:relative;
+  }
+  .plus-btn:hover{background:#eaeee0;}
+  .plus-btn:hover .tooltip{opacity:1;transform:translateY(0);}
+  .tooltip{
+    position:absolute;bottom:44px;left:50%;transform:translateX(-50%) translateY(4px);
+    background:var(--ink);color:#fff;font-size:11px;padding:4px 8px;border-radius:6px;
+    white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .15s ease, transform .15s ease;
+  }
+
+  /* ---------- Media preview in composer ---------- */
+  .media-preview-wrap{padding:10px 10px 4px;}
+  .media-preview{
+    display:inline-flex;align-items:center;gap:10px;
+    background:#f5f6f0;border:1px solid var(--line);border-radius:14px;
+    padding:8px 10px;max-width:100%;
+  }
+  .media-preview .thumb{
+    width:44px;height:44px;border-radius:10px;object-fit:cover;flex-shrink:0;background:#ddd;
+  }
+  .media-preview .thumb.video-thumb{
+    display:flex;align-items:center;justify-content:center;background:var(--green-800);color:#fff;font-size:16px;
+  }
+  .media-preview .meta{min-width:0;}
+  .media-preview .fname{font-size:12.5px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px;}
+  .media-preview .fsize{font-size:11px;color:var(--ink-soft);}
+  .media-preview .remove-x{
+    width:22px;height:22px;border-radius:50%;border:none;background:#e3e6db;color:var(--ink);
+    cursor:pointer;font-size:13px;line-height:1;flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  }
+  .media-preview .remove-x:hover{background:#d5d9c9;}
 
   .empty-chat{
     margin:auto;text-align:center;color:var(--ink-soft);
   }
   .empty-chat .brand-mark{margin:0 auto 14px;width:52px;height:52px;font-size:24px;}
 
+  .inline-error{font-size:12px;color:var(--danger);padding:2px 12px 0;}
+
   @media(max-width:720px){
     .nav-links{display:none;}
     .chat-scroll{padding:26px 5vw 16px;}
     .composer-wrap{padding:12px 5vw 20px;}
+    .media-preview .fname{max-width:120px;}
   }
 </style>
 </head>
@@ -274,8 +376,14 @@
   <h1 class="hero-title">Ask Meal Eats anything about<br><span class="script">your health</span>…</h1>
 
   <div class="search-shell">
+    <div class="media-preview-wrap" id="heroPreviewWrap" style="display:none;"></div>
+    <div class="inline-error" id="heroMediaError" style="display:none;"></div>
     <div class="search-row">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <button class="plus-btn" id="heroPlusBtn" onclick="document.getElementById('heroMediaInput').click()" type="button">
+        <span class="tooltip">Attach image / video</span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </button>
+      <input type="file" id="heroMediaInput" accept="image/*,video/*" hidden onchange="handleFileSelect(event)">
       <input id="heroInput" type="text" placeholder="Hey Dia..." onkeydown="if(event.key==='Enter')startChat()">
     </div>
     <div class="search-sub">
@@ -309,26 +417,69 @@
       Ask me anything about nutrition, meal plans, or healthy habits.
     </div>
   </div>
+
   <div class="composer-wrap">
     <div class="composer">
-      <input id="chatInput" type="text" placeholder="Ask anything" onkeydown="if(event.key==='Enter')sendMessage()">
-      <button class="send-btn" onclick="sendMessage()">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
-      </button>
+
+      <div class="media-preview-wrap" id="previewWrap" style="display:none;"></div>
+      <div class="inline-error" id="mediaError" style="display:none;"></div>
+
+      <div class="composer-row">
+        <button class="plus-btn" id="plusBtn" onclick="document.getElementById('mediaInput').click()" type="button">
+          <span class="tooltip">Attach image / video</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </button>
+        <input type="file" id="mediaInput" accept="image/*,video/*" hidden onchange="handleFileSelect(event)">
+        <input id="chatInput" type="text" placeholder="Ask anything" onkeydown="if(event.key==='Enter')sendMessage()">
+        <button class="send-btn" id="sendBtn" onclick="sendMessage()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+        </button>
+      </div>
+
     </div>
   </div>
 </section>
 
+<!-- Lightbox for viewing images larger -->
+<div id="lightbox" style="display:none;position:fixed;inset:0;background:rgba(20,33,15,.85);z-index:200;align-items:center;justify-content:center;cursor:zoom-out;" onclick="closeLightbox()">
+  <img id="lightboxImg" src="" style="max-width:90vw;max-height:90vh;border-radius:12px;">
+</div>
+
 <script>
 
+/* ==================================================
+   CONFIG — DO NOT CHANGE (backend API contract)
+   ================================================== */
 const CONFIG = {
-  API_URL: "https://mealseats.onrender.com/api/ai/chat", // <-- ISE APNE ACTUAL BACKEND URL SE REPLACE KARO
+  BASE_URL: "https://mealseats.onrender.com",
+  API_URL: "https://mealseats.onrender.com/api/ai/chat"
 };
 
-let guestSessionId = "guest_" + Math.random().toString(36).slice(2, 10);
-let chatId = null;
-let history = [];
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
+const ALLOWED_TYPES = [
+  "image/jpeg","image/png","image/webp",
+  "video/mp4","video/webm","video/quicktime"
+];
 
+/* ==================================================
+   GUEST SESSION (persisted in localStorage)
+   ================================================== */
+const STORAGE_KEY = "mealeats_guest_session_id";
+let guestSessionId = localStorage.getItem(STORAGE_KEY);
+if (!guestSessionId) {
+  guestSessionId = "guest_" + Math.random().toString(36).slice(2, 12);
+  localStorage.setItem(STORAGE_KEY, guestSessionId);
+}
+
+let chatId = null;
+let chatHistory = []; // in-memory only, no history API exists
+let selectedFile = null;
+let selectedFileObjectUrl = null;
+let isSending = false;
+
+/* ==================================================
+   VIEW SWITCHING
+   ================================================== */
 function showLanding(){
   document.getElementById('landing').style.display='flex';
   document.getElementById('chatView').style.display='none';
@@ -336,26 +487,35 @@ function showLanding(){
 
 function startChat(){
   const val = document.getElementById('heroInput').value.trim();
+  const file = selectedFile;
   document.getElementById('landing').style.display='none';
   document.getElementById('chatView').style.display='flex';
-  if(val){
+  if(val || file){
     document.getElementById('heroInput').value='';
-    submitUserMessage(val);
+    submitUserMessage(val, file);
+    clearSelectedFile();
   }
 }
 
 function quickAsk(text){
+  const file = selectedFile;
   document.getElementById('landing').style.display='none';
   document.getElementById('chatView').style.display='flex';
-  submitUserMessage(text);
+  submitUserMessage(text, file);
+  clearSelectedFile();
 }
 
 function sendMessage(){
+  if(isSending) return;
   const input = document.getElementById('chatInput');
   const val = input.value.trim();
-  if(!val) return;
+  const file = selectedFile;
+
+  if(!val && !file) return; // nothing to send
+
   input.value='';
-  submitUserMessage(val);
+  submitUserMessage(val, file);
+  clearSelectedFile();
 }
 
 function scrollToBottom(){
@@ -363,18 +523,173 @@ function scrollToBottom(){
   s.scrollTop = s.scrollHeight;
 }
 
-function addUserBubble(text){
+/* ==================================================
+   FILE SELECT / PREVIEW / VALIDATION
+   ================================================== */
+function handleFileSelect(evt){
+  const file = evt.target.files[0];
+  evt.target.value = ""; // allow re-selecting same file later
+  if(!file) return;
+
+  // Use the error box that belongs to whichever composer triggered this (hero vs chat)
+  const errBoxId = evt.target.id === 'heroMediaInput' ? 'heroMediaError' : 'mediaError';
+  const errBox = document.getElementById(errBoxId);
+  clearMediaErrors();
+
+  if(!ALLOWED_TYPES.includes(file.type)){
+    errBox.textContent = "Unsupported file type. Please select a JPG, PNG, WEBP image or MP4, WEBM, MOV video.";
+    errBox.style.display = 'block';
+    return;
+  }
+
+  if(file.size > MAX_FILE_SIZE){
+    errBox.textContent = "File is too large. Please select a file smaller than 10 MB.";
+    errBox.style.display = 'block';
+    return;
+  }
+
+  setSelectedFile(file);
+}
+
+function clearMediaErrors(){
+  ['mediaError','heroMediaError'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el){ el.style.display = 'none'; el.textContent = ''; }
+  });
+}
+
+function buildPreviewElement(file, objectUrl){
+  const preview = document.createElement('div');
+  preview.className = 'media-preview';
+
+  let thumbEl;
+  if(file.type.startsWith('image/')){
+    thumbEl = document.createElement('img');
+    thumbEl.className = 'thumb';
+    thumbEl.src = objectUrl;
+  } else {
+    thumbEl = document.createElement('div');
+    thumbEl.className = 'thumb video-thumb';
+    thumbEl.textContent = '▶';
+  }
+
+  const meta = document.createElement('div');
+  meta.className = 'meta';
+  const fname = document.createElement('div');
+  fname.className = 'fname';
+  fname.textContent = file.name;
+  const fsize = document.createElement('div');
+  fsize.className = 'fsize';
+  fsize.textContent = formatFileSize(file.size);
+  meta.appendChild(fname);
+  meta.appendChild(fsize);
+
+  const removeBtn = document.createElement('button');
+  removeBtn.className = 'remove-x';
+  removeBtn.type = 'button';
+  removeBtn.innerHTML = '&times;';
+  removeBtn.onclick = clearSelectedFile;
+
+  preview.appendChild(thumbEl);
+  preview.appendChild(meta);
+  preview.appendChild(removeBtn);
+  return preview;
+}
+
+// Preview slots: the landing hero box and the in-chat composer.
+// Both are kept in sync so a file attached before the first message
+// (on the landing page) shows correctly, and stays attach-able
+// once the user is inside the chat view too.
+const PREVIEW_WRAP_IDS = ['heroPreviewWrap', 'previewWrap'];
+
+function setSelectedFile(file){
+  clearSelectedFile(); // revoke any previous object URL
+
+  selectedFile = file;
+  selectedFileObjectUrl = URL.createObjectURL(file);
+
+  PREVIEW_WRAP_IDS.forEach(id => {
+    const wrap = document.getElementById(id);
+    if(!wrap) return;
+    wrap.style.display = 'block';
+    wrap.innerHTML = '';
+    wrap.appendChild(buildPreviewElement(file, selectedFileObjectUrl));
+  });
+}
+
+function clearSelectedFile(){
+  selectedFile = null;
+  if(selectedFileObjectUrl){
+    URL.revokeObjectURL(selectedFileObjectUrl);
+    selectedFileObjectUrl = null;
+  }
+  clearMediaErrors();
+  PREVIEW_WRAP_IDS.forEach(id => {
+    const wrap = document.getElementById(id);
+    if(!wrap) return;
+    wrap.style.display = 'none';
+    wrap.innerHTML = '';
+  });
+}
+
+function formatFileSize(bytes){
+  if(bytes < 1024) return bytes + ' B';
+  if(bytes < 1024*1024) return (bytes/1024).toFixed(1) + ' KB';
+  return (bytes/(1024*1024)).toFixed(1) + ' MB';
+}
+
+/* ==================================================
+   RENDERING: USER BUBBLE (with optional media)
+   ================================================== */
+function addUserBubble(text, file){
   const empty = document.getElementById('emptyChat');
   if(empty) empty.remove();
+
   const scroll = document.getElementById('chatScroll');
   const div = document.createElement('div');
   div.className='msg user';
-  div.innerHTML = `<div class="bubble"></div>`;
-  div.querySelector('.bubble').textContent = text;
+
+  if(file){
+    const mediaWrap = document.createElement('div');
+    mediaWrap.className = 'msg-media';
+    const objUrl = URL.createObjectURL(file);
+
+    if(file.type.startsWith('image/')){
+      const img = document.createElement('img');
+      img.src = objUrl;
+      img.onclick = () => openLightbox(objUrl);
+      mediaWrap.appendChild(img);
+    } else {
+      const vid = document.createElement('video');
+      vid.src = objUrl;
+      vid.controls = true;
+      mediaWrap.appendChild(vid);
+    }
+    div.appendChild(mediaWrap);
+  }
+
+  if(text){
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble';
+    bubble.textContent = text;
+    div.appendChild(bubble);
+  }
+
   scroll.appendChild(div);
   scrollToBottom();
 }
 
+function openLightbox(src){
+  document.getElementById('lightboxImg').src = src;
+  document.getElementById('lightbox').style.display = 'flex';
+}
+function closeLightbox(){
+  document.getElementById('lightbox').style.display = 'none';
+}
+
+/* ==================================================
+   TYPING INDICATOR
+   ================================================== */
 function addTypingBubble(){
   const scroll = document.getElementById('chatScroll');
   const div = document.createElement('div');
@@ -385,91 +700,275 @@ function addTypingBubble(){
   scrollToBottom();
   return div;
 }
+function removeTypingBubble(){
+  const t = document.getElementById('typingBubble');
+  if(t) t.remove();
+}
 
-/* Halka sa markdown -> HTML renderer: **bold**, ### headings, * lists, --- rules, line breaks */
-function renderMarkdown(text){
-  let escaped = text
-    .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+/* ==================================================
+   MARKDOWN RENDERER (headings, bold, italic, lists,
+   numbered lists, hr, tables) — HTML-escaped input only
+   ================================================== */
+function escapeHtml(str){
+  return str
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;")
+    .replace(/'/g,"&#39;");
+}
 
+function renderInline(str){
+  // bold, italic — operates on already-escaped text
+  let s = str;
+  s = s.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+  s = s.replace(/(^|[^*])\*(?!\*)([^*]+?)\*(?!\*)/g, "$1<em>$2</em>");
+  return s;
+}
+
+function isTableSeparatorRow(line){
+  return /^\|?(\s*:?-{2,}:?\s*\|)+\s*:?-{2,}:?\s*\|?$/.test(line.trim());
+}
+
+function parseTableRow(line){
+  let l = line.trim();
+  if(l.startsWith('|')) l = l.slice(1);
+  if(l.endsWith('|')) l = l.slice(0, -1);
+  return l.split('|').map(c => c.trim());
+}
+
+function renderMarkdown(raw){
+  const escaped = escapeHtml(raw);
   const lines = escaped.split("\n");
   let html = "";
-  let inList = false;
+  let i = 0;
+  let inUl = false, inOl = false;
 
-  for(let raw of lines){
-    let line = raw.trim();
-
-    if(line === "---"){
-      if(inList){ html += "</ul>"; inList=false; }
-      html += "<hr>";
-      continue;
-    }
-    if(/^###\s+/.test(line)){
-      if(inList){ html += "</ul>"; inList=false; }
-      html += `<h4>${line.replace(/^###\s+/,"")}</h4>`;
-      continue;
-    }
-    if(/^\*\s+/.test(line) || /^-\s+/.test(line)){
-      if(!inList){ html += "<ul>"; inList = true; }
-      html += `<li>${line.replace(/^(\*|-)\s+/,"")}</li>`;
-      continue;
-    }
-    if(line === ""){
-      if(inList){ html += "</ul>"; inList=false; }
-      continue;
-    }
-    if(inList){ html += "</ul>"; inList=false; }
-    html += `<p>${line}</p>`;
+  function closeLists(){
+    if(inUl){ html += "</ul>"; inUl = false; }
+    if(inOl){ html += "</ol>"; inOl = false; }
   }
-  if(inList) html += "</ul>";
 
-  // bold
-  html = html.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+  while(i < lines.length){
+    const line = lines[i];
+    const trimmed = line.trim();
+
+    // Table detection: current line has a pipe, next line is a separator row
+    if(trimmed.includes('|') && i+1 < lines.length && isTableSeparatorRow(lines[i+1])){
+      closeLists();
+      const headerCells = parseTableRow(trimmed);
+      let tableHtml = '<div class="table-scroll"><table class="md-table"><thead><tr>';
+      headerCells.forEach(c => tableHtml += `<th>${renderInline(c)}</th>`);
+      tableHtml += '</tr></thead><tbody>';
+      i += 2; // skip header + separator
+      while(i < lines.length && lines[i].trim().includes('|') && lines[i].trim() !== ''){
+        const rowCells = parseTableRow(lines[i]);
+        tableHtml += '<tr>';
+        rowCells.forEach(c => tableHtml += `<td>${renderInline(c)}</td>`);
+        tableHtml += '</tr>';
+        i++;
+      }
+      tableHtml += '</tbody></table></div>';
+      html += tableHtml;
+      continue;
+    }
+
+    if(trimmed === "---" || trimmed === "***"){
+      closeLists();
+      html += "<hr>";
+      i++; continue;
+    }
+
+    let m;
+    if((m = /^###\s+(.*)$/.exec(trimmed))){
+      closeLists(); html += `<h4>${renderInline(m[1])}</h4>`; i++; continue;
+    }
+    if((m = /^##\s+(.*)$/.exec(trimmed))){
+      closeLists(); html += `<h3>${renderInline(m[1])}</h3>`; i++; continue;
+    }
+    if((m = /^#\s+(.*)$/.exec(trimmed))){
+      closeLists(); html += `<h2>${renderInline(m[1])}</h2>`; i++; continue;
+    }
+
+    if((m = /^(\*|-)\s+(.*)$/.exec(trimmed))){
+      if(inOl){ html += "</ol>"; inOl = false; }
+      if(!inUl){ html += "<ul>"; inUl = true; }
+      html += `<li>${renderInline(m[2])}</li>`; i++; continue;
+    }
+
+    if((m = /^\d+\.\s+(.*)$/.exec(trimmed))){
+      if(inUl){ html += "</ul>"; inUl = false; }
+      if(!inOl){ html += "<ol>"; inOl = true; }
+      html += `<li>${renderInline(m[1])}</li>`; i++; continue;
+    }
+
+    if(trimmed === ""){
+      closeLists(); i++; continue;
+    }
+
+    closeLists();
+    html += `<p>${renderInline(trimmed)}</p>`;
+    i++;
+  }
+  closeLists();
   return html;
 }
 
-function addAiBubble(text){
-  const typing = document.getElementById('typingBubble');
-  if(typing) typing.remove();
+/* ==================================================
+   PDF CARD
+   ================================================== */
+function buildPdfCard(pdf){
+  const pdfUrl = CONFIG.BASE_URL + pdf.url;
+  const card = document.createElement('div');
+  card.className = 'pdf-card';
+  card.innerHTML = `
+    <div class="pdf-icon">PDF</div>
+    <div class="pdf-info">
+      <div class="pdf-title">MealEats AI Plan</div>
+      <div class="pdf-name">${escapeHtml(pdf.fileName || 'plan.pdf')}</div>
+      <div class="pdf-actions">
+        <a class="pdf-btn solid" href="${pdfUrl}" target="_blank" rel="noopener">View PDF</a>
+        <a class="pdf-btn" href="${pdfUrl}" target="_blank" rel="noopener" download="${escapeHtml(pdf.fileName || 'plan.pdf')}">Download</a>
+      </div>
+    </div>
+  `;
+  return card;
+}
+
+/* ==================================================
+   AI BUBBLE (response + pdf card + actions)
+   ================================================== */
+function addAiBubble(text, pdf){
+  removeTypingBubble();
   const scroll = document.getElementById('chatScroll');
   const div = document.createElement('div');
   div.className='msg ai';
+
   const bubble = document.createElement('div');
   bubble.className='bubble';
-  bubble.innerHTML = renderMarkdown(text);
+  bubble.innerHTML = renderMarkdown(text || "");
   div.appendChild(bubble);
-  div.innerHTML += `<div class="ai-actions">
+
+  if(pdf && pdf.generated){
+    div.appendChild(buildPdfCard(pdf));
+  }
+
+  const actions = document.createElement('div');
+  actions.className = 'ai-actions';
+  actions.innerHTML = `
+    <button type="button" class="copy-btn" title="Copy">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+    </button>
+    <button type="button" class="like-btn" title="Like">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>
+    </button>
+    <button type="button" class="dislike-btn" title="Dislike">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h3a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-3"/></svg>
-    </div>`;
+    </button>
+    <span class="copy-feedback">Copied</span>
+  `;
+  div.appendChild(actions);
+
+  const copyBtn = actions.querySelector('.copy-btn');
+  const feedback = actions.querySelector('.copy-feedback');
+  copyBtn.addEventListener('click', () => {
+    navigator.clipboard.writeText(text || "").then(() => {
+      feedback.classList.add('show');
+      setTimeout(() => feedback.classList.remove('show'), 1500);
+    }).catch(() => {});
+  });
+
+  const likeBtn = actions.querySelector('.like-btn');
+  const dislikeBtn = actions.querySelector('.dislike-btn');
+  likeBtn.addEventListener('click', () => {
+    likeBtn.classList.toggle('active');
+    dislikeBtn.classList.remove('active');
+  });
+  dislikeBtn.addEventListener('click', () => {
+    dislikeBtn.classList.toggle('active');
+    likeBtn.classList.remove('active');
+  });
+
   scroll.appendChild(div);
   scrollToBottom();
 }
 
-async function submitUserMessage(text){
-  addUserBubble(text);
+function addErrorBubble(message){
+  removeTypingBubble();
+  const scroll = document.getElementById('chatScroll');
+  const div = document.createElement('div');
+  div.className='msg ai';
+  div.innerHTML = `<div class="error-bubble">${escapeHtml(message)}</div>`;
+  scroll.appendChild(div);
+  scrollToBottom();
+}
+
+/* ==================================================
+   SEND STATE (disable button while in-flight)
+   ================================================== */
+function setSending(state){
+  isSending = state;
+  const sendBtn = document.getElementById('sendBtn');
+  sendBtn.disabled = state;
+}
+
+/* ==================================================
+   CORE SEND FUNCTION — uses backend contract exactly:
+   FormData: guestSessionId, message (optional), media (optional)
+   ================================================== */
+async function submitUserMessage(text, file){
+  if(isSending) return;
+
+  addUserBubble(text, file);
   addTypingBubble();
+  setSending(true);
+
+  const formData = new FormData();
+  formData.append("guestSessionId", guestSessionId);
+  if(text){
+    formData.append("message", text);
+  }
+  if(file){
+    formData.append("media", file);
+  }
 
   try{
     const response = await fetch(CONFIG.API_URL, {
-      method:"POST",
-      headers:{ "Content-Type":"application/json" },
-      body: JSON.stringify({
-        guestSessionId: guestSessionId,
-        message: text
-      })
+      method: "POST",
+      body: formData
     });
-    const json = await response.json();
 
-    if(json && json.success && json.data && json.data.response){
-      if(json.data.chatId) chatId = json.data.chatId;
-      addAiBubble(json.data.response);
-    } else {
-      addAiBubble(json.message || "Sorry, I couldn't generate a response just now.");
+    if(!response.ok){
+      let friendly = "Something went wrong. Please try again.";
+      if(response.status === 400) friendly = "That request couldn't be processed. Please rephrase and try again.";
+      else if(response.status === 429) friendly = "You're sending messages too quickly. Please wait a moment and try again.";
+      else if(response.status >= 500) friendly = "MealEats AI is temporarily unavailable. Please try again shortly.";
+      addErrorBubble(friendly);
+      return;
     }
+
+    let json;
+    try{
+      json = await response.json();
+    }catch(parseErr){
+      addErrorBubble("Received an unexpected response from the server. Please try again.");
+      return;
+    }
+
+    if(json && json.success && json.data){
+      if(json.data.chatId) chatId = json.data.chatId;
+      chatHistory.push({ role:'user', text, hadMedia: !!file });
+      chatHistory.push({ role:'ai', text: json.data.response, pdf: json.data.pdf });
+      addAiBubble(json.data.response, json.data.pdf);
+    } else {
+      addErrorBubble((json && json.message) || "Sorry, I couldn't generate a response just now.");
+    }
+
   }catch(err){
-    addAiBubble("Backend se connect nahi ho paaya. Please API_URL check karo aur dobara try karo.");
     console.error(err);
+    addErrorBubble("Couldn't connect to MealEats AI. Please check your connection and try again.");
+  }finally{
+    setSending(false);
   }
 }
 </script>

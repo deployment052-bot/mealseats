@@ -1,85 +1,113 @@
 const ChatLog = require("./ChatLog.js");
 const { generateAIResponse } = require("./geminiService.js");
 
- const {
+const {
   generatePDF,
 } = require("./utils/pdfGenerator.js");
+
 const {
   shouldGeneratePDF,
 } = require("./utils/pdfDetector.js");
+
+
+/**
+ * =========================================================
+ * CHAT WITH AI
+ * =========================================================
+ */
+
 const chatWithAI = async (req, res, next) => {
+
   try {
+
     const {
       message,
       guestSessionId,
     } = req.body;
 
-    // =================================================
+
+    // =====================================================
     // SESSION VALIDATION
-    // =================================================
+    // =====================================================
 
     if (
       !guestSessionId ||
       typeof guestSessionId !== "string"
     ) {
+
       return res.status(400).json({
         success: false,
         message: "guestSessionId is required",
       });
+
     }
+
 
     const cleanGuestSessionId =
       guestSessionId.trim();
 
-    // =================================================
+
+    // =====================================================
     // MEDIA
-    // =================================================
+    // =====================================================
 
-    const media = req.file || null;
+    const media =
+      req.file || null;
 
-    // =================================================
+
+    // =====================================================
     // MESSAGE
-    // =================================================
+    // =====================================================
 
     const cleanMessage =
       typeof message === "string"
         ? message.trim()
         : "";
 
-    // =================================================
+
+    // =====================================================
     // MESSAGE OR MEDIA REQUIRED
-    // =================================================
+    // =====================================================
 
     if (!cleanMessage && !media) {
+
       return res.status(400).json({
         success: false,
         message:
           "Message or image/video is required",
       });
+
     }
 
-    // =================================================
+
+    // =====================================================
     // MESSAGE LENGTH
-    // =================================================
+    // =====================================================
 
     if (cleanMessage.length > 2000) {
+
       return res.status(400).json({
         success: false,
         message:
           "Message cannot exceed 2000 characters",
       });
+
     }
 
-    // =================================================
-    // PDF INTENT DETECTION
-    // =================================================
+
+    // =====================================================
+    // PDF INTENT
+    // =====================================================
 
     const shouldGeneratePdf =
-      shouldGeneratePDF(cleanMessage);
+      shouldGeneratePDF(
+        cleanMessage
+      );
 
-    // =================================================
+
+    // =====================================================
     // GET IP
-    // =================================================
+    // =====================================================
 
     const ipAddress =
       req.headers["x-forwarded-for"]
@@ -88,11 +116,14 @@ const chatWithAI = async (req, res, next) => {
       req.socket.remoteAddress ||
       null;
 
-    // =================================================
-    // DEBUG
-    // =================================================
 
-    console.log("AI CHAT REQUEST");
+    // =====================================================
+    // DEBUG
+    // =====================================================
+
+    console.log(
+      "AI CHAT REQUEST"
+    );
 
     console.log({
       guestSessionId:
@@ -116,53 +147,183 @@ const chatWithAI = async (req, res, next) => {
         media?.size,
     });
 
-    // =================================================
+
+    // =====================================================
+    // GET PREVIOUS CHAT HISTORY
+    // =====================================================
+    //
+    // IMPORTANT:
+    //
+    // Same guestSessionId ki previous chats DB se
+    // nikal rahe hain.
+    //
+    // Agar Gemini KEY-1 se KEY-2 par switch hota hai,
+    // KEY-2 ko ye history milegi.
+    //
+    // =====================================================
+
+    const previousChats =
+      await ChatLog.find({
+        guestSessionId:
+          cleanGuestSessionId,
+      })
+        .select(
+          "message response createdAt"
+        )
+        .sort({
+          createdAt: 1,
+        })
+        .limit(20)
+        .lean();
+
+
+    // =====================================================
+    // CONVERT DB HISTORY TO GEMINI HISTORY
+    // =====================================================
+
+    const history =
+      previousChats.flatMap(
+        (chat) => {
+
+          const historyItems = [];
+
+
+          // -----------------------------------------------
+          // USER MESSAGE
+          // -----------------------------------------------
+
+          if (
+            chat.message &&
+            chat.message.trim()
+          ) {
+
+            historyItems.push({
+              role: "user",
+
+              parts: [
+                {
+                  text:
+                    chat.message,
+                },
+              ],
+            });
+
+          }
+
+
+          // -----------------------------------------------
+          // AI RESPONSE
+          // -----------------------------------------------
+
+          if (
+            chat.response &&
+            chat.response.trim()
+          ) {
+
+            historyItems.push({
+              role: "model",
+
+              parts: [
+                {
+                  text:
+                    chat.response,
+                },
+              ],
+            });
+
+          }
+
+
+          return historyItems;
+
+        }
+      );
+
+
+    // =====================================================
+    // DEBUG HISTORY
+    // =====================================================
+
+    console.log(
+      "Previous chat count:",
+      previousChats.length
+    );
+
+    console.log(
+      "Gemini history items:",
+      history.length
+    );
+
+
+    // =====================================================
     // GENERATE AI RESPONSE
-    // =================================================
+    // =====================================================
 
     const aiResponse =
       await generateAIResponse({
-        message: cleanMessage,
+
+        message:
+          cleanMessage,
+
         media,
+
+        history,
+
       });
 
-    // =================================================
+
+    // =====================================================
     // PDF GENERATION
-    // =================================================
+    // =====================================================
 
     let pdf = null;
 
+
     if (shouldGeneratePdf) {
+
       console.log(
         "Generating PDF..."
       );
 
+
       const fileName =
         `mealeats-ai-${Date.now()}.pdf`;
+
 
       await generatePDF(
         aiResponse,
         fileName
       );
 
+
       pdf = {
-        generated: true,
+
+        generated:
+          true,
+
         fileName,
-        url: `/uploads/${fileName}`,
+
+        url:
+          `/uploads/${fileName}`,
+
       };
+
 
       console.log(
         "PDF generated successfully:",
         fileName
       );
+
     }
 
-    // =================================================
+
+    // =====================================================
     // SAVE CHAT
-    // =================================================
+    // =====================================================
 
     const chatLog =
       await ChatLog.create({
+
         guestSessionId:
           cleanGuestSessionId,
 
@@ -172,44 +333,54 @@ const chatWithAI = async (req, res, next) => {
         response:
           aiResponse,
 
-        media: media
-          ? {
-              type:
-                media.mimetype.startsWith(
-                  "image/"
-                )
-                  ? "IMAGE"
-                  : "VIDEO",
+        media:
+          media
+            ? {
 
-              originalName:
-                media.originalname,
+                type:
+                  media.mimetype.startsWith(
+                    "image/"
+                  )
+                    ? "IMAGE"
+                    : "VIDEO",
 
-              mimeType:
-                media.mimetype,
+                originalName:
+                  media.originalname,
 
-              size:
-                media.size,
+                mimeType:
+                  media.mimetype,
 
-              url: null,
+                size:
+                  media.size,
 
-              publicId: null,
-            }
-          : null,
+                url:
+                  null,
+
+                publicId:
+                  null,
+
+              }
+            : null,
 
         ipAddress,
+
       });
 
-    // =================================================
+
+    // =====================================================
     // RESPONSE
-    // =================================================
+    // =====================================================
 
     return res.status(200).json({
-      success: true,
+
+      success:
+        true,
 
       message:
         "AI response generated successfully",
 
       data: {
+
         chatId:
           chatLog._id,
 
@@ -229,17 +400,23 @@ const chatWithAI = async (req, res, next) => {
 
         timestamp:
           chatLog.createdAt,
+
       },
+
     });
 
+
   } catch (error) {
+
     console.error(
       "AI CHAT ERROR:",
       error
     );
 
     next(error);
+
   }
+
 };
 
 

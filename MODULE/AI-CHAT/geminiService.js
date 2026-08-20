@@ -1,8 +1,36 @@
 const { GoogleGenAI } = require("@google/genai");
 
-const ai = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY,
-});
+/**
+ * =========================================================
+ * GEMINI API CLIENTS
+ * =========================================================
+ */
+
+const geminiKeys = [
+  process.env.GEMINI_API_KEY_1,
+  process.env.GEMINI_API_KEY_2,
+  process.env.GEMINI_API_KEY_3,
+  process.env.GEMINI_API_KEY_4,
+].filter(Boolean);
+
+if (!geminiKeys.length) {
+  throw new Error("No Gemini API keys configured");
+}
+
+const geminiClients = geminiKeys.map(
+  (apiKey) =>
+    new GoogleGenAI({
+      apiKey,
+    }),
+);
+
+/**
+ * =========================================================
+ * GEMINI MODEL
+ * =========================================================
+ */
+
+const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
 
 /**
  * =========================================================
@@ -280,7 +308,6 @@ a beautiful document.
 Never include PDF creation instructions in the response.
 `;
 
-
 /**
  * =========================================================
  * GENERATE AI RESPONSE
@@ -290,27 +317,27 @@ Never include PDF creation instructions in the response.
  * - Text
  * - Image + text
  * - Video + text
+ * - Previous conversation history
  */
 
 const generateAIResponse = async ({
   message = "",
   media = null,
+  history = [],
 }) => {
-
-  const cleanMessage =
-    typeof message === "string"
-      ? message.trim()
-      : "";
+  const cleanMessage = typeof message === "string" ? message.trim() : "";
 
   // =======================================================
   // MESSAGE OR MEDIA REQUIRED
   // =======================================================
 
   if (!cleanMessage && !media) {
-    throw new Error(
-      "Message or media is required"
-    );
+    throw new Error("Message or media is required");
   }
+
+  // =======================================================
+  // CONTENTS
+  // =======================================================
 
   let contents;
 
@@ -319,144 +346,175 @@ const generateAIResponse = async ({
   // =======================================================
 
   if (!media) {
-
-    contents = cleanMessage;
-
-  }
-
-  // =======================================================
-  // IMAGE / VIDEO
-  // =======================================================
-
-  else {
-
-    if (!media.buffer) {
-      throw new Error(
-        "Media buffer is required"
-      );
-    }
-
-    if (!media.mimetype) {
-      throw new Error(
-        "Media MIME type is required"
-      );
-    }
-
     contents = [
-      {
-        text:
-          cleanMessage ||
-          "Analyze this media and provide a useful response.",
-      },
+      ...history,
 
       {
-        inlineData: {
-          mimeType: media.mimetype,
-          data: media.buffer.toString("base64"),
-        },
+        role: "user",
+
+        parts: [
+          {
+            text: cleanMessage,
+          },
+        ],
       },
     ];
   }
 
   // =======================================================
-  // GEMINI REQUEST WITH RETRY
+  // IMAGE / VIDEO
+  // =======================================================
+  else {
+    if (!media.buffer) {
+      throw new Error("Media buffer is required");
+    }
+
+    if (!media.mimetype) {
+      throw new Error("Media MIME type is required");
+    }
+
+    contents = [
+      ...history,
+
+      {
+        role: "user",
+
+        parts: [
+          {
+            text:
+              cleanMessage ||
+              "Analyze this media and provide a useful response.",
+          },
+
+          {
+            inlineData: {
+              mimeType: media.mimetype,
+
+              data: media.buffer.toString("base64"),
+            },
+          },
+        ],
+      },
+    ];
+  }
+
+  // =======================================================
+  // GEMINI FAILOVER
+  // =======================================================
+  //
+  // KEY 1
+  //   ↓ 429 / 503
+  // KEY 2
+  //   ↓ 429 / 503
+  // KEY 3
+  //   ↓ 429 / 503
+  // KEY 4
+  //   ↓
+  // RESPONSE
+  //
   // =======================================================
 
   let response = null;
 
-  for (let attempt = 1; attempt <= 3; attempt++) {
+  for (let index = 0; index < geminiClients.length; index++) {
+    const ai = geminiClients[index];
 
     try {
+      console.log(`Gemini client ${index + 1}/${geminiClients.length} request`);
 
-      console.log(
-        `Gemini request attempt ${attempt}/3`
-      );
+      response = await ai.models.generateContent({
+        model: GEMINI_MODEL,
 
-      response =
-        await ai.models.generateContent({
+        contents,
 
-          model: "gemini-3.6-flash",
+        config: {
+          systemInstruction: SYSTEM_INSTRUCTION,
 
-          contents,
+          maxOutputTokens: 5000,
+        },
+      });
 
-          config: {
+      // ===================================================
+      // SUCCESS
+      // ===================================================
 
-            systemInstruction:
-              SYSTEM_INSTRUCTION,
+      console.log(`Gemini client ${index + 1} succeeded`);
 
-            maxOutputTokens: 5000,
-
-          },
-
-        });
-
-      // Successful response
       break;
-
     } catch (error) {
+      console.error(`Gemini client ${index + 1} failed:`, {
+        status: error.status,
 
-      console.error(
-        `Gemini attempt ${attempt} failed:`,
-        error.status,
-        error.message
-      );
+        code: error.code,
+
+        message: error.message,
+      });
 
       // ===================================================
-      // RETRY TEMPORARY 503 ERRORS
+      // RATE LIMIT
       // ===================================================
 
-      if (
-        error.status === 503 &&
-        attempt < 3
-      ) {
+      const isRateLimit =
+        error.status === 429 ||
+        error.code === 429 ||
+        error.message?.includes("RESOURCE_EXHAUSTED");
 
-        const retryDelay =
-          attempt * 2000;
+      // ===================================================
+      // TEMPORARY SERVER ERROR
+      // ===================================================
 
+      const isTemporary = error.status === 503;
+
+      // ===================================================
+      // TRY NEXT KEY
+      // ===================================================
+
+      if (isRateLimit || isTemporary) {
         console.log(
-          `Gemini unavailable. Retrying after ${retryDelay}ms...`
-        );
-
-        await new Promise(
-          (resolve) =>
-            setTimeout(
-              resolve,
-              retryDelay
-            )
+          `Gemini client ${index + 1} unavailable. Trying next client...`,
         );
 
         continue;
       }
+
+      // ===================================================
+      // OTHER ERROR
+      // ===================================================
 
       throw error;
     }
   }
 
   // =======================================================
-  // VALIDATE RESPONSE
+  // ALL GEMINI CLIENTS FAILED
   // =======================================================
 
   if (!response) {
-    throw new Error(
-      "Gemini did not return a response"
-    );
+    throw new Error("ALL_GEMINI_PROVIDERS_EXHAUSTED");
   }
 
-  const text =
-    response.text;
+  // =======================================================
+  // VALIDATE RESPONSE
+  // =======================================================
 
-  if (
-    !text ||
-    !text.trim()
-  ) {
-    throw new Error(
-      "Gemini returned an empty response"
-    );
+  const text = response.text;
+
+  if (!text || !text.trim()) {
+    throw new Error("Gemini returned an empty response");
   }
+
+  // =======================================================
+  // RETURN
+  // =======================================================
 
   return text.trim();
 };
 
+/**
+ * =========================================================
+ * EXPORT
+ * =========================================================
+ */
 
 module.exports = {
   generateAIResponse,

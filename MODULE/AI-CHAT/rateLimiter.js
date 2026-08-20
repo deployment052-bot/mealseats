@@ -3,7 +3,7 @@ const rateLimit = require("express-rate-limit");
 const aiChatLimiter = rateLimit({
   windowMs: 24 * 60 * 60 * 1000,
 
-  limit: 8,
+  limit: 200,
 
   standardHeaders: "draft-7",
 
