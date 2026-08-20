@@ -10,6 +10,14 @@ const app = express();
 
 /**
  * ============================
+ * TRUST PROXY
+ * ============================
+ */
+
+app.set("trust proxy", 1);
+
+/**
+ * ============================
  * CORS CONFIGURATION
  * ============================
  */
@@ -23,6 +31,7 @@ const allowedOrigins = [
 app.use(
   cors({
     origin: function (origin, callback) {
+
       if (!origin) {
         return callback(null, true);
       }
@@ -128,12 +137,16 @@ app.use((req, res) => {
  */
 
 app.use((err, req, res, next) => {
+
   console.error("ERROR:", err);
 
   return res.status(err.statusCode || 500).json({
     success: false,
-    message: err.message || "Internal Server Error",
+    message:
+      err.message ||
+      "Internal Server Error",
   });
+
 });
 
 module.exports = app;

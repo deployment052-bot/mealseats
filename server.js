@@ -16,7 +16,11 @@ const startServer = async () => {
       console.log(`MealEats server running on port ${PORT}`);
     });
   } catch (error) {
-    console.error("Server startup failed:", error.message);
+    console.error(
+      "Server startup failed:",
+      error.message
+    );
+
     process.exit(1);
   }
 };
