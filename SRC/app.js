@@ -26,6 +26,7 @@ const allowedOrigins = [
   "http://localhost:3000",
   "http://localhost:5173",
   "https://mealeats.netlify.app",
+  "https://mealeats-ab4z-five.vercel.app"
 ];
 
 app.use(
